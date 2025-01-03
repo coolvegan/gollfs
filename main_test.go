@@ -41,3 +41,11 @@ func TestCommentIsNoComment2(t *testing.T) {
 		t.Errorf("Must be not a comment")
 	}
 }
+func TestFoo(t *testing.T) {
+	x := NewLlamaServers()
+	x.contactServer()
+	t.Error(x.srv)
+	if x.cfg.Interval != 60 {
+		t.Errorf("Interval must be 60 is %d", x.cfg.Interval)
+	}
+}

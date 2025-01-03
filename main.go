@@ -35,10 +35,10 @@ type LLamaServers struct {
 }
 
 func (l *LLamaServers) Best() (Server, error) {
-	if len(l.srv) == 0 {
+	if len((*l).srv) == 0 {
 		return Server{}, fmt.Errorf("Missing LLamaserver")
 	}
-	return l.srv[0], nil
+	return (*l).srv[0], nil
 }
 
 func NewLlamaServers() *LLamaServers {
@@ -48,17 +48,16 @@ func NewLlamaServers() *LLamaServers {
 		log.Fatal(err)
 	}
 	result := LLamaServers{cfg: *cfg, srv: make([]Server, 0, 3)}
+	result.contactServer()
 	result.refresh = func() {
 		for {
-			time.Sleep(time.Second * time.Duration(cfg.Interval))
 			result.contactServer()
-			fmt.Println(result)
+			time.Sleep(time.Second * time.Duration(cfg.Interval))
 		}
 	}
 	if cfg.Watchdog {
 		go result.refresh()
 	}
-	result.contactServer()
 	return &result
 }
 
