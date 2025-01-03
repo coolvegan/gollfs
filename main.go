@@ -27,6 +27,8 @@ type config struct {
 }
 
 type LLamaServers struct {
+	mu      sync.Mutex
+	wg      sync.WaitGroup
 	cfg     config
 	srv     []Server
 	refresh func()
@@ -164,26 +166,24 @@ func checkConfig(cfg *config) error {
 }
 
 func (l *LLamaServers) contactServer() {
-	var mu sync.Mutex
-	var wg sync.WaitGroup
 	l.srv = nil
 
 	client := http.Client{Timeout: time.Millisecond * time.Duration(l.cfg.Timeout)}
 	for _, srv := range l.cfg.Server {
-		wg.Add(1)
+		l.wg.Add(1)
 		go func() {
-			defer wg.Done()
+			defer l.wg.Done()
 			uri := fmt.Sprintf("%s%s", srv.Uri, SERVER_POSTFIX)
 			r, err := client.Head(uri)
 			if err != nil || r.StatusCode != 200 {
 				return
 			}
-			mu.Lock()
+			l.mu.Lock()
 			(l.srv) = append(l.srv, srv)
-			mu.Unlock()
+			l.mu.Unlock()
 		}()
 	}
-	wg.Wait()
+	l.wg.Wait()
 	sort.Slice(l.srv, func(i, j int) bool {
 		return l.srv[i].Prio < l.srv[j].Prio
 	})
