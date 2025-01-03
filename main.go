@@ -30,15 +30,15 @@ type LLamaServers struct {
 	mu      sync.Mutex
 	wg      sync.WaitGroup
 	cfg     config
-	srv     []Server
+	srv     *[]Server
 	refresh func()
 }
 
 func (l *LLamaServers) Best() (Server, error) {
-	if len((*l).srv) == 0 {
+	if len(*l.srv) == 0 {
 		return Server{}, fmt.Errorf("Missing LLamaserver")
 	}
-	return (*l).srv[0], nil
+	return (*l.srv)[0], nil
 }
 
 func NewLlamaServers() *LLamaServers {
@@ -47,7 +47,8 @@ func NewLlamaServers() *LLamaServers {
 	if err != nil {
 		log.Fatal(err)
 	}
-	result := LLamaServers{cfg: *cfg, srv: make([]Server, 0, 3)}
+	srv := []Server{}
+	result := LLamaServers{cfg: *cfg, srv: &srv}
 	result.contactServer()
 	result.refresh = func() {
 		for {
@@ -178,12 +179,12 @@ func (l *LLamaServers) contactServer() {
 				return
 			}
 			l.mu.Lock()
-			(l.srv) = append(l.srv, srv)
+			(*l.srv) = append(*l.srv, srv)
 			l.mu.Unlock()
 		}()
 	}
 	l.wg.Wait()
-	sort.Slice(l.srv, func(i, j int) bool {
-		return l.srv[i].Prio < l.srv[j].Prio
+	sort.Slice((*l.srv), func(i, j int) bool {
+		return (*l.srv)[i].Prio < (*l.srv)[j].Prio
 	})
 }
