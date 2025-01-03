@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-type server struct {
+type Server struct {
 	uri  string
 	prio int
 }
@@ -23,18 +23,18 @@ type config struct {
 	Timeout  int
 	Watchdog bool
 	Interval int
-	Server   []server
+	Server   []Server
 }
 
 type LLamaServers struct {
 	cfg     config
-	srv     []server
+	srv     []Server
 	refresh func()
 }
 
-func (l *LLamaServers) Best() (server, error) {
+func (l *LLamaServers) Best() (Server, error) {
 	if len(l.srv) == 0 {
-		return server{}, fmt.Errorf("Missing LLamaserver")
+		return Server{}, fmt.Errorf("Missing LLamaserver")
 	}
 	return l.srv[0], nil
 }
@@ -45,7 +45,7 @@ func NewLlamaServers() *LLamaServers {
 	if err != nil {
 		log.Fatal(err)
 	}
-	result := LLamaServers{cfg: *cfg, srv: make([]server, 0, 3)}
+	result := LLamaServers{cfg: *cfg, srv: make([]Server, 0, 3)}
 	result.refresh = func() {
 		for {
 			time.Sleep(time.Second * time.Duration(cfg.Interval))
@@ -142,7 +142,7 @@ func readConfiguration() *config {
 			if err != nil {
 				log.Fatalln(CONFIG_ERROR_MSG)
 			}
-			s := server{uri: rescomma[0], prio: prio}
+			s := Server{uri: rescomma[0], prio: prio}
 			cfg.Server = append(cfg.Server, s)
 			continue
 		}
