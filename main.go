@@ -15,8 +15,8 @@ import (
 )
 
 type Server struct {
-	uri  string
-	prio int
+	Uri  string
+	Urio int
 }
 
 type config struct {
