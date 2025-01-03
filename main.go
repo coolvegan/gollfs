@@ -16,7 +16,7 @@ import (
 
 type Server struct {
 	Uri  string
-	Urio int
+	Prio int
 }
 
 type config struct {
@@ -142,7 +142,7 @@ func readConfiguration() *config {
 			if err != nil {
 				log.Fatalln(CONFIG_ERROR_MSG)
 			}
-			s := Server{uri: rescomma[0], prio: prio}
+			s := Server{Uri: rescomma[0], Prio: prio}
 			cfg.Server = append(cfg.Server, s)
 			continue
 		}
@@ -173,7 +173,7 @@ func (l *LLamaServers) contactServer() {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			uri := fmt.Sprintf("%s%s", srv.uri, SERVER_POSTFIX)
+			uri := fmt.Sprintf("%s%s", srv.Uri, SERVER_POSTFIX)
 			r, err := client.Head(uri)
 			if err != nil || r.StatusCode != 200 {
 				return
@@ -185,6 +185,6 @@ func (l *LLamaServers) contactServer() {
 	}
 	wg.Wait()
 	sort.Slice(l.srv, func(i, j int) bool {
-		return l.srv[i].prio < l.srv[j].prio
+		return l.srv[i].Prio < l.srv[j].Prio
 	})
 }
