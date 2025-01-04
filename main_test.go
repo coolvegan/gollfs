@@ -43,7 +43,7 @@ func TestCommentIsNoComment2(t *testing.T) {
 }
 func TestFoo(t *testing.T) {
 	x := NewLlamaServers()
-	x.contactServer()
+	t.Error(x.Best())
 	if x.cfg.Interval != 60 {
 		t.Errorf("Interval must be 60 is %d", x.cfg.Interval)
 	}

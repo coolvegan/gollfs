@@ -48,15 +48,17 @@ func NewLlamaServers() *LLamaServers {
 		log.Fatal(err)
 	}
 	result := LLamaServers{cfg: *cfg, srv: make([]Server, 0, 5)}
-	result.srv = result.contactServer()
 	result.refresh = func() {
 		for {
-			result.srv = result.contactServer()
 			time.Sleep(time.Second * time.Duration(cfg.Interval))
+			result.contactServer()
 		}
 	}
 	if cfg.Watchdog {
+		result.contactServer()
 		go result.refresh()
+	} else {
+		result.contactServer()
 	}
 	return &result
 }
@@ -164,8 +166,7 @@ func checkConfig(cfg *config) error {
 	return nil
 }
 
-func (l *LLamaServers) contactServer() []Server {
-	l.srv = nil
+func (l *LLamaServers) contactServer() {
 	client := http.Client{Timeout: time.Millisecond * time.Duration(l.cfg.Timeout)}
 	for _, srv := range l.cfg.Server {
 		l.wg.Add(1)
@@ -185,5 +186,4 @@ func (l *LLamaServers) contactServer() []Server {
 	sort.Slice(l.srv, func(i, j int) bool {
 		return (l.srv)[i].Prio < (l.srv)[j].Prio
 	})
-	return l.srv
 }
