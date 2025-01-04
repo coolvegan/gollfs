@@ -30,15 +30,15 @@ type LLamaServers struct {
 	mu      sync.Mutex
 	wg      sync.WaitGroup
 	cfg     config
-	srv     *[]Server
+	srv     []Server
 	refresh func()
 }
 
 func (l *LLamaServers) Best() (Server, error) {
-	if len(*l.srv) == 0 {
+	if len(l.srv) == 0 {
 		return Server{}, fmt.Errorf("Missing LLamaserver")
 	}
-	return (*l.srv)[0], nil
+	return (l.srv)[0], nil
 }
 
 func NewLlamaServers() *LLamaServers {
@@ -47,12 +47,11 @@ func NewLlamaServers() *LLamaServers {
 	if err != nil {
 		log.Fatal(err)
 	}
-	srv := []Server{}
-	result := LLamaServers{cfg: *cfg, srv: &srv}
-	result.contactServer()
+	result := LLamaServers{cfg: *cfg, srv: make([]Server, 0, 5)}
+	result.srv = result.contactServer()
 	result.refresh = func() {
 		for {
-			result.contactServer()
+			result.srv = result.contactServer()
 			time.Sleep(time.Second * time.Duration(cfg.Interval))
 		}
 	}
@@ -165,9 +164,8 @@ func checkConfig(cfg *config) error {
 	return nil
 }
 
-func (l *LLamaServers) contactServer() {
+func (l *LLamaServers) contactServer() []Server {
 	l.srv = nil
-
 	client := http.Client{Timeout: time.Millisecond * time.Duration(l.cfg.Timeout)}
 	for _, srv := range l.cfg.Server {
 		l.wg.Add(1)
@@ -179,12 +177,13 @@ func (l *LLamaServers) contactServer() {
 				return
 			}
 			l.mu.Lock()
-			(*l.srv) = append(*l.srv, srv)
+			l.srv = append(l.srv, srv)
 			l.mu.Unlock()
 		}()
 	}
 	l.wg.Wait()
-	sort.Slice((*l.srv), func(i, j int) bool {
-		return (*l.srv)[i].Prio < (*l.srv)[j].Prio
+	sort.Slice(l.srv, func(i, j int) bool {
+		return (l.srv)[i].Prio < (l.srv)[j].Prio
 	})
+	return l.srv
 }
