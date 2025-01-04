@@ -168,6 +168,7 @@ func checkConfig(cfg *config) error {
 
 func (l *LLamaServers) contactServer() {
 	client := http.Client{Timeout: time.Millisecond * time.Duration(l.cfg.Timeout)}
+	l.srv = l.srv[:0]
 	for _, srv := range l.cfg.Server {
 		l.wg.Add(1)
 		go func() {
